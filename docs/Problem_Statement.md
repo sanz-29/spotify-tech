@@ -141,6 +141,3 @@ The following features are **not included** in this project:
 
 **Python – FastAPI**
 
-### Reason
-
-FastAPI is a modern, high-performance Python framework that provides excellent support for REST APIs, JWT authentication, asynchronous programming, automatic API documentation, and AI integration. It is well-suited for developing a secure, scalable, and cloud-ready music streaming platform.
