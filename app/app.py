@@ -1,8 +1,11 @@
 from fastapi import FastAPI
+from app.database import Base, engine
+from app.models import user
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Spotify Tech API",
-    description="Music Streaming Platform Backend",
     version="1.0.0"
 )
 
@@ -11,11 +14,4 @@ app = FastAPI(
 def root():
     return {
         "message": "Spotify Tech API is running"
-    }
-
-
-@app.get("/health")
-def health_check():
-    return {
-        "status": "healthy"
     }
