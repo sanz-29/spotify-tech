@@ -28,3 +28,64 @@ def create_artist(
     db.refresh(new_artist)
 
     return new_artist
+
+@router.get("/{artist_id}")
+def get_artist(
+    artist_id: int,
+    db: Session = Depends(get_db)
+):
+    artist = db.query(Artist).filter(
+        Artist.artist_id == artist_id
+    ).first()
+
+    if artist is None:
+        return {
+            "message": "Artist not found"
+        }
+
+    return artist
+
+@router.put("/{artist_id}")
+def update_artist(
+    artist_id: int,
+    artist_data: ArtistCreate,
+    db: Session = Depends(get_db)
+):
+    artist = db.query(Artist).filter(
+        Artist.artist_id == artist_id
+    ).first()
+
+    if artist is None:
+        return {
+            "message": "Artist not found"
+        }
+
+    artist.name = artist_data.name
+    artist.bio = artist_data.bio
+    artist.image_url = artist_data.image_url
+
+    db.commit()
+    db.refresh(artist)
+
+    return artist
+
+@router.delete("/{artist_id}")
+def delete_artist(
+    artist_id: int,
+    db: Session = Depends(get_db)
+):
+    artist = db.query(Artist).filter(
+        Artist.artist_id == artist_id
+    ).first()
+
+    if artist is None:
+        return {
+            "message": "Artist not found"
+        }
+
+    db.delete(artist)
+    db.commit()
+
+    return {
+        "message": "Artist deleted successfully"
+    }
