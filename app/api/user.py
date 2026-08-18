@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin
+from app.security import hash_password, verify_password
 
 
 router = APIRouter(
@@ -20,7 +21,7 @@ def create_user(
     new_user = User(
         username=user.username,
         email=user.email,
-        password=user.password,
+        password=hash_password(user.password),
         role=user.role
     )
 
@@ -45,7 +46,7 @@ def login(
             "message": "Invalid username or password"
         }
 
-    if user.password != user_data.password:
+    if not verify_password(user_data.password, user.password):
         return {
             "message": "Invalid username or password"
         }
