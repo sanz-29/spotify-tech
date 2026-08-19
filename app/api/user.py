@@ -5,7 +5,8 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin
 from app.security import hash_password, verify_password
-
+from app.auth import create_access_token
+from app.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/users",
@@ -46,14 +47,33 @@ def login(
             "message": "Invalid username or password"
         }
 
-    if not verify_password(user_data.password, user.password):
+    if not verify_password(
+        user_data.password,
+        user.password
+    ):
         return {
             "message": "Invalid username or password"
         }
 
-    return {
-        "message": "Login successful",
+    access_token = create_access_token({
         "user_id": user.user_id,
         "username": user.username,
         "role": user.role
+    })
+
+    return {
+        "message": "Login successful",
+        "access_token": access_token,
+        "user_id": user.user_id,
+        "username": user.username,
+        "role": user.role
+    }
+
+@router.get("/me")
+def get_me(
+    current_user: dict = Depends(get_current_user)
+):
+    return {
+        "message": "Authenticated user",
+        "user": current_user
     }
