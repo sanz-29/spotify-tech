@@ -4,13 +4,9 @@ import { useNavigate } from "react-router-dom";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-
   const navigate = useNavigate();
 
-  const login = async (e) => {
-    e.preventDefault();
-
+  const login = async () => {
     const response = await fetch("http://127.0.0.1:8000/users/login", {
       method: "POST",
       headers: {
@@ -26,9 +22,12 @@ function Login() {
 
     if (response.ok && data.access_token) {
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("role", data.role);
+
       navigate("/dashboard");
     } else {
-      setMessage("Invalid username or password");
+      alert("Invalid username or password");
     }
   };
 
@@ -36,29 +35,25 @@ function Login() {
     <div>
       <h1>Spotify Tech</h1>
 
-      <form onSubmit={login}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-        <br />
+      <br /><br />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-        <br />
+      <br /><br />
 
-        <button type="submit">Login</button>
-      </form>
-
-      <p>{message}</p>
+      <button onClick={login}>Login</button>
     </div>
   );
 }
