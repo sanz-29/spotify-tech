@@ -1,0 +1,5 @@
+import { useEffect, useState } from "react";
+import { api } from "../api/client";
+import { ArtistCard, Empty } from "../components/CatalogCard";
+import { PageHeading } from "./Songs";
+export default function Artists() { const [items, setItems] = useState([]); const [q, setQ] = useState(""); const [error, setError] = useState(""); useEffect(() => { const t = setTimeout(() => (q ? api.searchArtists(q) : api.artists("?limit=100")).then(setItems).catch((e) => setError(e.message)), 250); return () => clearTimeout(t); }, [q]); return <div className="page"><PageHeading eyebrow="DISCOVER" title="Artists" subtitle="Meet the people behind the music." /><label className="search-input wide-search">⌕<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search artists" /></label>{error ? <div className="error-message">{error}</div> : items.length ? <div className="entity-grid">{items.map((item) => <ArtistCard key={item.artist_id} artist={item} />)}</div> : <Empty>No artists found.</Empty>}</div>; }

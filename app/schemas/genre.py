@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class GenreCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=50)
 
 
 class GenreResponse(BaseModel):

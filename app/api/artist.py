@@ -98,6 +98,22 @@ def search_artists(
     return db.query(Artist).filter(Artist.name.ilike(f"%{q}%")).limit(100).all()
 
 
+@router.get("/me", response_model=ArtistResponse, summary="Get the current artist profile")
+def get_my_artist_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_artist)
+):
+    artist = db.query(Artist).filter(
+        Artist.user_id == current_user.user_id
+    ).first()
+    if artist is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Artist profile not found"
+        )
+    return artist
+
+
 @router.get("/{artist_id}", response_model=ArtistResponse)
 def get_artist(
     artist_id: int,
