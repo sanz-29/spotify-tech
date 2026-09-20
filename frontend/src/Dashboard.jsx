@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { api, API_URL } from "./api/client";
 
 function Dashboard() {
   const [songs, setSongs] = useState([]);
@@ -9,11 +10,8 @@ function Dashboard() {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/songs/")
-      .then((response) => response.json())
-      .then((data) => {
-        setSongs(data);
-      })
+    api.songs()
+      .then(setSongs)
       .catch((error) => {
         console.error("Error fetching songs:", error);
       });
@@ -142,7 +140,11 @@ function Dashboard() {
 
           <audio
             ref={audioRef}
-            src={`http://127.0.0.1:8000${currentSong.audio_url}`}
+            src={
+              currentSong.audio_url?.startsWith("http")
+                ? currentSong.audio_url
+                : `${API_URL}${currentSong.audio_url || ""}`
+            }
             autoPlay
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}

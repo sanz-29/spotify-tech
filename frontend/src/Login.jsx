@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api, TOKEN_KEY } from "./api/client";
 
 function Login() {
   const navigate = useNavigate();
@@ -14,31 +15,21 @@ function Login() {
     try {
       setMessage("Connecting to backend...");
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/users/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            username: username,
-            password: password
-          })
-        }
-      );
+      const data = await api.login({
+        username,
+        password
+      });
 
-      console.log("2. Backend response status:", response.status);
+      console.log("2. Login response received");
+      console.log("3. Backend response status:", {
+        success: Boolean(data?.access_token),
+        user_id: data?.user_id
+      });
 
-      const data = await response.json();
-
-      console.log("3. Backend response data:", data);
-
-      if (response.ok && data.access_token) {
+      if (data?.access_token) {
         console.log("4. Login successful");
 
-        localStorage.setItem("token", data.access_token);
+        localStorage.setItem(TOKEN_KEY, data.access_token);
 
         console.log("5. Token saved");
 
@@ -48,7 +39,7 @@ function Login() {
       } else {
         console.log("Login failed");
 
-        setMessage(data.message || "Invalid username or password");
+        setMessage(data?.message || "Invalid username or password");
       }
 
     } catch (error) {
