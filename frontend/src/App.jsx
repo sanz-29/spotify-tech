@@ -17,16 +17,26 @@ import PlaylistDetail from "./pages/PlaylistDetail";
 import Admin from "./pages/Admin";
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-    <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+    <Route
+      path="/"
+      element={
+        loading
+          ? <div className="center-state">Loading your library...</div>
+          : user
+            ? <Navigate to="/dashboard" replace />
+            : <Login />
+      }
+    />
+    <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+    <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
     <Route element={<ProtectedRoute />}><Route element={<Layout />}>
-      <Route path="/" element={<Home />} /><Route path="/songs" element={<Songs />} /><Route path="/artists" element={<Artists />} /><Route path="/artists/:id" element={<ArtistProfile />} /><Route path="/albums" element={<Albums />} /><Route path="/genres" element={<Genres />} /><Route path="/playlists" element={<Playlists />} /><Route path="/playlists/:id" element={<PlaylistDetail />} />
+      <Route path="/dashboard" element={<Home />} /><Route path="/songs" element={<Songs />} /><Route path="/artists" element={<Artists />} /><Route path="/artists/:id" element={<ArtistProfile />} /><Route path="/albums" element={<Albums />} /><Route path="/genres" element={<Genres />} /><Route path="/playlists" element={<Playlists />} /><Route path="/playlists/:id" element={<PlaylistDetail />} />
       <Route element={<ProtectedRoute roles={["artist", "admin"]} />}><Route path="/artist/manage" element={<ArtistManage />} /></Route>
       <Route element={<ProtectedRoute roles={["admin"]} />}><Route path="/admin" element={<Admin />} /></Route>
     </Route></Route>
-    <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
+    <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
   </Routes>;
 }
 export default function App() { return <BrowserRouter><AuthProvider><PlayerProvider><AppRoutes /></PlayerProvider></AuthProvider></BrowserRouter>; }

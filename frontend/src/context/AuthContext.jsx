@@ -1,16 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { api } from "../api/client";
+import { api, TOKEN_KEY } from "../api/client";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(Boolean(localStorage.getItem("spotify_tech_token")));
+  const [loading, setLoading] = useState(Boolean(localStorage.getItem(TOKEN_KEY)));
 
   useEffect(() => {
     const expire = () => logout();
     window.addEventListener("spotify-auth-expired", expire);
-    if (localStorage.getItem("spotify_tech_token")) {
+    if (localStorage.getItem(TOKEN_KEY)) {
       api.me().then(setUser).catch(logout).finally(() => setLoading(false));
     }
     return () => window.removeEventListener("spotify-auth-expired", expire);
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
 
   async function login(credentials) {
     const data = await api.login(credentials);
-    localStorage.setItem("spotify_tech_token", data.access_token);
+    localStorage.setItem(TOKEN_KEY, data.access_token);
     const currentUser = await api.me();
     setUser(currentUser);
     return currentUser;
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
-    localStorage.removeItem("spotify_tech_token");
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
     setLoading(false);
   }

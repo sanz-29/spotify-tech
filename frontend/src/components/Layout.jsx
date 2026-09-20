@@ -7,9 +7,9 @@ export default function Layout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <NavLink className="brand" to="/"><span className="brand-mark">♪</span> Spotify Tech</NavLink>
+        <NavLink className="brand" to="/dashboard"><span className="brand-mark">♪</span> Spotify Tech</NavLink>
         <nav>
-          <NavLink to="/" end>⌂ <span>Home</span></NavLink>
+          <NavLink to="/dashboard" end>⌂ <span>Home</span></NavLink>
           <NavLink to="/songs">♫ <span>Songs</span></NavLink>
           <NavLink to="/artists">◉ <span>Artists</span></NavLink>
           <NavLink to="/albums">▣ <span>Albums</span></NavLink>
