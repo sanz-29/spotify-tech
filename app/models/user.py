@@ -14,3 +14,4 @@ class User(Base):
     role = Column(String(20), nullable=False, default="user")
 
     playlists = relationship("Playlist", back_populates="user")
+    artist = relationship("Artist", back_populates="user", uselist=False)

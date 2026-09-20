@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -7,9 +7,16 @@ class Artist(Base):
     __tablename__ = "artists"
 
     artist_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.user_id"),
+        unique=True,
+        nullable=True
+    )
     name = Column(String(100), unique=True, nullable=False)
     bio = Column(Text, nullable=True)
     image_url = Column(String(255), nullable=True)
 
     albums = relationship("Album", back_populates="artist")
     songs = relationship("Song", back_populates="artist")
+    user = relationship("User", back_populates="artist")

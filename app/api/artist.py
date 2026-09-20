@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import get_current_user, require_artist
 from app.models.artist import Artist
-from app.schemas.artist import ArtistCreate
+from app.models.user import User
+from app.schemas.artist import ArtistCreate, ArtistResponse
 
 
 router = APIRouter(
@@ -12,24 +15,78 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+def get_managed_artist(
+    artist_id: int,
+    current_user: User,
+    db: Session
+) -> Artist:
+    artist = db.query(Artist).filter(
+        Artist.artist_id == artist_id
+    ).first()
+
+    if artist is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Artist not found"
+        )
+
+    if current_user.role != "admin" and artist.user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this artist"
+        )
+
+    return artist
+
+
+@router.post("/", response_model=ArtistResponse)
 def create_artist(
     artist: ArtistCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_artist)
 ):
+    if current_user.role == "artist":
+        existing_artist = db.query(Artist).filter(
+            Artist.user_id == current_user.user_id
+        ).first()
+
+        if existing_artist is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Artist profile already exists"
+            )
+
+        user_id = current_user.user_id
+    else:
+        user_id = None
+
     new_artist = Artist(
+        user_id=user_id,
         name=artist.name,
         bio=artist.bio,
         image_url=artist.image_url
     )
 
     db.add(new_artist)
-    db.commit()
-    db.refresh(new_artist)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Artist name already exists"
+        )
 
+    db.refresh(new_artist)
     return new_artist
 
-@router.get("/{artist_id}")
+
+@router.get("/", response_model=list[ArtistResponse])
+def get_artists(db: Session = Depends(get_db)):
+    return db.query(Artist).all()
+
+
+@router.get("/{artist_id}", response_model=ArtistResponse)
 def get_artist(
     artist_id: int,
     db: Session = Depends(get_db)
@@ -39,50 +96,46 @@ def get_artist(
     ).first()
 
     if artist is None:
-        return {
-            "message": "Artist not found"
-        }
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Artist not found"
+        )
 
     return artist
 
-@router.put("/{artist_id}")
+
+@router.put("/{artist_id}", response_model=ArtistResponse)
 def update_artist(
     artist_id: int,
     artist_data: ArtistCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    artist = db.query(Artist).filter(
-        Artist.artist_id == artist_id
-    ).first()
-
-    if artist is None:
-        return {
-            "message": "Artist not found"
-        }
-
+    artist = get_managed_artist(artist_id, current_user, db)
     artist.name = artist_data.name
     artist.bio = artist_data.bio
     artist.image_url = artist_data.image_url
 
-    db.commit()
-    db.refresh(artist)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Artist name already exists"
+        )
 
+    db.refresh(artist)
     return artist
+
 
 @router.delete("/{artist_id}")
 def delete_artist(
     artist_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    artist = db.query(Artist).filter(
-        Artist.artist_id == artist_id
-    ).first()
-
-    if artist is None:
-        return {
-            "message": "Artist not found"
-        }
-
+    artist = get_managed_artist(artist_id, current_user, db)
     db.delete(artist)
     db.commit()
 

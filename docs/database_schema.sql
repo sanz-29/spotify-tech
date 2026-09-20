@@ -33,3 +33,8 @@ CREATE TABLE IF NOT EXISTS playlist_songs (
         REFERENCES songs(song_id)
         ON DELETE CASCADE
 );
+
+ALTER TABLE artists
+    ADD COLUMN user_id INT NULL UNIQUE,
+    ADD CONSTRAINT fk_artists_user
+        FOREIGN KEY (user_id) REFERENCES users(user_id);
