@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ArtistCreate(BaseModel):
-    name: str
-    bio: str | None = None
-    image_url: str | None = None
+    name: str = Field(..., min_length=1, max_length=100)
+    bio: str | None = Field(default=None, max_length=5000)
+    image_url: str | None = Field(default=None, max_length=255)
 
 
 class ArtistResponse(BaseModel):
@@ -13,5 +13,4 @@ class ArtistResponse(BaseModel):
     bio: str | None
     image_url: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

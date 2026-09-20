@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from app.config import ALLOWED_ORIGINS
 from app.database import Base, engine
 from app.models import album, artist, genre, playlist, playlist_song, song, user
 
@@ -19,14 +22,19 @@ from app.api.admin import router as admin_router
 # Create FastAPI application
 app = FastAPI(
     title="Spotify Tech API",
-    version="1.0.0"
+    version="1.0.0",
+    description=(
+        "A JWT-authenticated music catalog API with role-based administration "
+        "and owner-protected playlists and artist content."
+    ),
+    contact={"name": "Spotify Tech API"},
 )
 
 
 @app.exception_handler(IntegrityError)
 async def handle_integrity_error(
-    request: Request,
-    exc: IntegrityError
+    _request: Request,
+    _exc: IntegrityError
 ):
     return JSONResponse(
         status_code=409,
@@ -36,8 +44,8 @@ async def handle_integrity_error(
 
 @app.exception_handler(SQLAlchemyError)
 async def handle_database_error(
-    request: Request,
-    exc: SQLAlchemyError
+    _request: Request,
+    _exc: SQLAlchemyError
 ):
     return JSONResponse(
         status_code=500,
@@ -48,15 +56,10 @@ async def handle_database_error(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174"
-    ],
+    allow_origins=list(ALLOWED_ORIGINS),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 
@@ -64,10 +67,11 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 
-# Serve music files
+music_directory = Path(__file__).resolve().parent.parent / "music"
+
 app.mount(
     "/music",
-    StaticFiles(directory="music"),
+    StaticFiles(directory=str(music_directory)),
     name="music"
 )
 
@@ -83,8 +87,13 @@ app.include_router(admin_router)
 
 
 # Root endpoint
-@app.get("/")
+@app.get("/", tags=["Health"], summary="API status")
 def root():
     return {
         "message": "Spotify Tech API is running"
     }
+
+
+@app.get("/health", tags=["Health"], summary="Health check")
+def health_check():
+    return {"status": "ok"}

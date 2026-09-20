@@ -6,3 +6,7 @@ python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
+argon2-cffi
+email-validator
+pytest
+httpx

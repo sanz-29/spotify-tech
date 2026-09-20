@@ -1,14 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SongCreate(BaseModel):
-    title: str
-    artist_id: int
+    title: str = Field(..., min_length=1, max_length=50)
+    artist_id: int = Field(..., ge=1)
     album_id: int | None = None
     genre_id: int | None = None
-    audio_url: str
-    cover_image_url: str | None = None
-    duration: int
+    audio_url: str = Field(..., min_length=1, max_length=255)
+    cover_image_url: str | None = Field(default=None, max_length=255)
+    duration: int = Field(..., ge=0)
 
 
 class SongResponse(BaseModel):
@@ -21,5 +21,4 @@ class SongResponse(BaseModel):
     cover_image_url: str | None
     duration: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

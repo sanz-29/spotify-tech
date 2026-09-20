@@ -18,7 +18,11 @@ class Song(Base):
     artist = relationship("Artist", back_populates="songs")
     album = relationship("Album", back_populates="songs")
     genre = relationship("Genre", back_populates="songs")
-    playlist_songs = relationship("PlaylistSong", back_populates="song")
+    playlist_songs = relationship(
+        "PlaylistSong",
+        back_populates="song",
+        cascade="all, delete-orphan",
+    )
     playlists = relationship(
         "Playlist",
         secondary="playlist_songs",

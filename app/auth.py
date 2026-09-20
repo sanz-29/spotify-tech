@@ -1,16 +1,16 @@
-import os
 from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
-from dotenv import load_dotenv
+from typing import Any, Mapping
 
-load_dotenv()
+from jose import JWTError, jwt
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from app.config import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    ALGORITHM,
+    SECRET_KEY,
+)
 
 
-def create_access_token(data):
+def create_access_token(data: Mapping[str, Any]) -> str:
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
@@ -26,13 +26,13 @@ def create_access_token(data):
     )
 
 
-def verify_token(token):
+def verify_token(token: str) -> dict[str, Any] | None:
     try:
         payload = jwt.decode(
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
-        return payload
+        return dict(payload)
     except JWTError:
         return None

@@ -7,17 +7,24 @@ from app.database import get_db
 from app.models.user import User
 
 
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: Session = Depends(get_db)
-):
+)-> User:
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=401,
+            headers={"WWW-Authenticate": "Bearer"},
+            detail="Authentication required"
+        )
+
     payload = verify_token(credentials.credentials)
 
     user_id = payload.get("user_id") if payload else None
-    if user_id is None:
+    if not isinstance(user_id, int) or isinstance(user_id, bool):
         raise HTTPException(
             status_code=401,
             headers={"WWW-Authenticate": "Bearer"},

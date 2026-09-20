@@ -13,5 +13,9 @@ class User(Base):
     password = Column(String(255), nullable=False)
     role = Column(String(20), nullable=False, default="user")
 
-    playlists = relationship("Playlist", back_populates="user")
+    playlists = relationship(
+        "Playlist",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     artist = relationship("Artist", back_populates="user", uselist=False)

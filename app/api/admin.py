@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -102,10 +102,12 @@ def ensure_admin_remains(
 
 @router.get("/users", response_model=list[UserResponse])
 def get_users(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(User).all()
+    return db.query(User).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
@@ -158,10 +160,12 @@ def delete_user(
 
 @router.get("/artists", response_model=list[ArtistResponse])
 def get_artists(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(Artist).all()
+    return db.query(Artist).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/artists/{artist_id}", response_model=ArtistResponse)
@@ -210,10 +214,12 @@ def delete_artist(
 
 @router.get("/songs", response_model=list[SongResponse])
 def get_songs(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(Song).all()
+    return db.query(Song).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/songs/{song_id}", response_model=SongResponse)
@@ -273,10 +279,12 @@ def delete_song(
 
 @router.get("/albums", response_model=list[AlbumResponse])
 def get_albums(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(Album).all()
+    return db.query(Album).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/albums/{album_id}", response_model=AlbumResponse)
@@ -321,13 +329,19 @@ def delete_album(
 
 @router.get("/genres", response_model=list[GenreResponse])
 def get_genres(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(Genre).all()
+    return db.query(Genre).offset((page - 1) * limit).limit(limit).all()
 
 
-@router.post("/genres", response_model=GenreResponse)
+@router.post(
+    "/genres",
+    response_model=GenreResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_genre(
     genre_data: GenreCreate,
     db: Session = Depends(get_db),

@@ -15,7 +15,11 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=GenreResponse)
+@router.post(
+    "/",
+    response_model=GenreResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_genre(
     genre: GenreCreate,
     db: Session = Depends(get_db),

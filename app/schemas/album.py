@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AlbumCreate(BaseModel):
@@ -17,5 +17,4 @@ class AlbumResponse(BaseModel):
     release_date: date | None
     cover_image_url: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

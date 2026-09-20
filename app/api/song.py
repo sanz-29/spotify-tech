@@ -93,7 +93,11 @@ def get_owned_song(
     return song
 
 
-@router.post("/", response_model=SongResponse)
+@router.post(
+    "/",
+    response_model=SongResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_song(
     song: SongCreate,
     db: Session = Depends(get_db),

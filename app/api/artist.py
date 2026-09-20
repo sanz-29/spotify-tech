@@ -39,7 +39,11 @@ def get_managed_artist(
     return artist
 
 
-@router.post("/", response_model=ArtistResponse)
+@router.post(
+    "/",
+    response_model=ArtistResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_artist(
     artist: ArtistCreate,
     db: Session = Depends(get_db),

@@ -6,20 +6,31 @@ from app.auth import create_access_token
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.user import (
+    TokenResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
 from app.security import hash_password, verify_password
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.post("/", response_model=UserResponse, summary="Register a user")
+@router.post(
+    "/",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a user",
+    description="Create a user account with a securely hashed password.",
+)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         username=user.username,
         email=user.email,
         password=hash_password(user.password),
-        role="user"
+        role="user",
     )
     db.add(new_user)
     try:
@@ -28,30 +39,41 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email already exists"
+            detail="Username or email already exists",
         )
     db.refresh(new_user)
     return new_user
 
 
-@router.post("/login", summary="Authenticate a user")
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Authenticate a user",
+    description="Validate credentials and return a bearer access token.",
+)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == user_data.username).first()
     if user is None or not verify_password(user_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             headers={"WWW-Authenticate": "Bearer"},
-            detail="Invalid username or password"
+            detail="Invalid username or password",
         )
     return {
         "message": "Login successful",
         "access_token": create_access_token({"user_id": user.user_id}),
+        "token_type": "bearer",
         "user_id": user.user_id,
         "username": user.username,
-        "role": user.role
+        "role": user.role,
     }
 
 
-@router.get("/me", response_model=UserResponse, summary="Get the current user")
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get the current user",
+    description="Return the user represented by the validated bearer token.",
+)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user

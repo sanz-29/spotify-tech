@@ -47,7 +47,11 @@ def get_owned_playlist(
     return playlist
 
 
-@router.post("/", response_model=PlaylistResponse)
+@router.post(
+    "/",
+    response_model=PlaylistResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_playlist(
     playlist: PlaylistCreate,
     db: Session = Depends(get_db),
@@ -121,7 +125,8 @@ def delete_playlist(
 
 @router.post(
     "/{playlist_id}/songs",
-    response_model=PlaylistSongResponse
+    response_model=PlaylistSongResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 def add_song_to_playlist(
     playlist_id: int,

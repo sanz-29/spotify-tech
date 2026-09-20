@@ -65,7 +65,11 @@ def get_owned_album(
     return album
 
 
-@router.post("/", response_model=AlbumResponse)
+@router.post(
+    "/",
+    response_model=AlbumResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_album(
     album: AlbumCreate,
     db: Session = Depends(get_db),
