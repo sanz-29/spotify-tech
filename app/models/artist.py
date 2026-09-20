@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
@@ -9,3 +10,6 @@ class Artist(Base):
     name = Column(String(100), unique=True, nullable=False)
     bio = Column(Text, nullable=True)
     image_url = Column(String(255), nullable=True)
+
+    albums = relationship("Album", back_populates="artist")
+    songs = relationship("Song", back_populates="artist")

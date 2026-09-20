@@ -3,11 +3,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.models import user, artist, song
+from app.models import album, artist, genre, song, user
 
 from app.api.artist import router as artist_router
 from app.api.user import router as user_router
 from app.api.song import router as song_router
+from app.api.album import router as album_router
+from app.api.genre import router as genre_router
 
 
 # Create FastAPI application
@@ -48,6 +50,8 @@ app.mount(
 app.include_router(artist_router)
 app.include_router(user_router)
 app.include_router(song_router)
+app.include_router(album_router)
+app.include_router(genre_router)
 
 
 # Root endpoint
