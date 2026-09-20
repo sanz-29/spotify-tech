@@ -7,6 +7,7 @@ from app.dependencies import get_current_user
 from app.models.playlist import Playlist
 from app.models.playlist_song import PlaylistSong
 from app.models.song import Song
+from app.models.user import User
 from app.schemas.playlist import (
     PlaylistCreate,
     PlaylistResponse,
@@ -50,12 +51,12 @@ def get_owned_playlist(
 def create_playlist(
     playlist: PlaylistCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     new_playlist = Playlist(
         name=playlist.name,
         description=playlist.description,
-        user_id=current_user["user_id"]
+        user_id=current_user.user_id
     )
 
     db.add(new_playlist)
@@ -68,10 +69,10 @@ def create_playlist(
 @router.get("/", response_model=list[PlaylistResponse])
 def get_playlists(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return db.query(Playlist).filter(
-        Playlist.user_id == current_user["user_id"]
+        Playlist.user_id == current_user.user_id
     ).all()
 
 
@@ -79,9 +80,9 @@ def get_playlists(
 def get_playlist(
     playlist_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    return get_owned_playlist(playlist_id, current_user["user_id"], db)
+    return get_owned_playlist(playlist_id, current_user.user_id, db)
 
 
 @router.put("/{playlist_id}", response_model=PlaylistResponse)
@@ -89,9 +90,9 @@ def update_playlist(
     playlist_id: int,
     playlist_data: PlaylistCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    playlist = get_owned_playlist(playlist_id, current_user["user_id"], db)
+    playlist = get_owned_playlist(playlist_id, current_user.user_id, db)
     playlist.name = playlist_data.name
     playlist.description = playlist_data.description
 
@@ -105,9 +106,9 @@ def update_playlist(
 def delete_playlist(
     playlist_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    playlist = get_owned_playlist(playlist_id, current_user["user_id"], db)
+    playlist = get_owned_playlist(playlist_id, current_user.user_id, db)
     db.delete(playlist)
     db.commit()
 
@@ -124,9 +125,9 @@ def add_song_to_playlist(
     playlist_id: int,
     song_data: PlaylistSongCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    get_owned_playlist(playlist_id, current_user["user_id"], db)
+    get_owned_playlist(playlist_id, current_user.user_id, db)
 
     song = db.query(Song).filter(
         Song.song_id == song_data.song_id
@@ -172,9 +173,9 @@ def add_song_to_playlist(
 def get_playlist_songs(
     playlist_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    playlist = get_owned_playlist(playlist_id, current_user["user_id"], db)
+    playlist = get_owned_playlist(playlist_id, current_user.user_id, db)
     return [
         playlist_song.song
         for playlist_song in playlist.playlist_songs
@@ -186,9 +187,9 @@ def remove_song_from_playlist(
     playlist_id: int,
     song_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    get_owned_playlist(playlist_id, current_user["user_id"], db)
+    get_owned_playlist(playlist_id, current_user.user_id, db)
 
     playlist_song = db.query(PlaylistSong).filter(
         PlaylistSong.playlist_id == playlist_id,
