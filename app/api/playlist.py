@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -68,12 +68,14 @@ def create_playlist(
 
 @router.get("/", response_model=list[PlaylistResponse])
 def get_playlists(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     return db.query(Playlist).filter(
         Playlist.user_id == current_user.user_id
-    ).all()
+    ).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/{playlist_id}", response_model=PlaylistResponse)

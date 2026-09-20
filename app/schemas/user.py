@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Literal
 
 
 class UserCreate(BaseModel):
@@ -15,6 +16,12 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AdminUserUpdate(BaseModel):
+    username: str
+    email: str
+    role: Literal["user", "artist", "admin"]
 
 
 class UserLogin(BaseModel):

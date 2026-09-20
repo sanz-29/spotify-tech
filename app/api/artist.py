@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -81,9 +81,21 @@ def create_artist(
     return new_artist
 
 
-@router.get("/", response_model=list[ArtistResponse])
-def get_artists(db: Session = Depends(get_db)):
-    return db.query(Artist).all()
+@router.get("/", response_model=list[ArtistResponse], summary="List artists")
+def get_artists(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Artist).offset((page - 1) * limit).limit(limit).all()
+
+
+@router.get("/search", response_model=list[ArtistResponse], summary="Search artists")
+def search_artists(
+    q: str = Query(..., min_length=1, max_length=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Artist).filter(Artist.name.ilike(f"%{q}%")).limit(100).all()
 
 
 @router.get("/{artist_id}", response_model=ArtistResponse)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -118,9 +118,39 @@ def create_song(
     return new_song
 
 
-@router.get("/", response_model=list[SongResponse])
-def get_songs(db: Session = Depends(get_db)):
-    return db.query(Song).all()
+@router.get("/", response_model=list[SongResponse], summary="List and filter songs")
+def get_songs(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    artist_id: int | None = Query(None, ge=1),
+    album_id: int | None = Query(None, ge=1),
+    genre_id: int | None = Query(None, ge=1),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Song)
+    if artist_id is not None:
+        query = query.filter(Song.artist_id == artist_id)
+    if album_id is not None:
+        query = query.filter(Song.album_id == album_id)
+    if genre_id is not None:
+        query = query.filter(Song.genre_id == genre_id)
+    return query.offset((page - 1) * limit).limit(limit).all()
+
+
+@router.get("/search", response_model=list[SongResponse], summary="Search songs")
+def search_songs(
+    q: str = Query(..., min_length=1, max_length=100),
+    db: Session = Depends(get_db)
+):
+    pattern = f"%{q}%"
+    return db.query(Song).outerjoin(Artist).outerjoin(Album).outerjoin(
+        Genre
+    ).filter(
+        (Song.title.ilike(pattern)) |
+        (Artist.name.ilike(pattern)) |
+        (Album.title.ilike(pattern)) |
+        (Genre.name.ilike(pattern))
+    ).limit(100).all()
 
 
 @router.get("/{song_id}", response_model=SongResponse)

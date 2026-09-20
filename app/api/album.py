@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -98,9 +98,21 @@ def create_album(
     return new_album
 
 
-@router.get("/", response_model=list[AlbumResponse])
-def get_albums(db: Session = Depends(get_db)):
-    return db.query(Album).all()
+@router.get("/", response_model=list[AlbumResponse], summary="List albums")
+def get_albums(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Album).offset((page - 1) * limit).limit(limit).all()
+
+
+@router.get("/search", response_model=list[AlbumResponse], summary="Search albums")
+def search_albums(
+    q: str = Query(..., min_length=1, max_length=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Album).filter(Album.title.ilike(f"%{q}%")).limit(100).all()
 
 
 @router.get("/{album_id}", response_model=AlbumResponse)

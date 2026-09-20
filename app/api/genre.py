@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import require_admin
 from app.models.genre import Genre
+from app.models.user import User
 from app.schemas.genre import GenreCreate, GenreResponse
 
 
@@ -16,7 +18,8 @@ router = APIRouter(
 @router.post("/", response_model=GenreResponse)
 def create_genre(
     genre: GenreCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     existing_genre = db.query(Genre).filter(
         Genre.name == genre.name
@@ -44,9 +47,13 @@ def create_genre(
     return new_genre
 
 
-@router.get("/", response_model=list[GenreResponse])
-def get_genres(db: Session = Depends(get_db)):
-    return db.query(Genre).all()
+@router.get("/", response_model=list[GenreResponse], summary="List genres")
+def get_genres(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    return db.query(Genre).offset((page - 1) * limit).limit(limit).all()
 
 
 @router.get("/{genre_id}", response_model=GenreResponse)
@@ -71,7 +78,8 @@ def get_genre(
 def update_genre(
     genre_id: int,
     genre_data: GenreCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     genre = db.query(Genre).filter(
         Genre.genre_id == genre_id
@@ -104,7 +112,8 @@ def update_genre(
 @router.delete("/{genre_id}")
 def delete_genre(
     genre_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     genre = db.query(Genre).filter(
         Genre.genre_id == genre_id
