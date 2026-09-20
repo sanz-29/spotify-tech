@@ -5,8 +5,8 @@ import { api, TOKEN_KEY } from "./api/client";
 function Login() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("sanjay");
-  const [password, setPassword] = useState("mypassword");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const login = async () => {
